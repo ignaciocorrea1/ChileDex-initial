@@ -1,43 +1,121 @@
 import 'package:chiledex_demo/app/theme/app_theme.dart';
+import 'package:chiledex_demo/core/data/services/chiledex_api.dart';
+import 'package:chiledex_demo/core/domain/models/avistamiento_model.dart';
+import 'package:chiledex_demo/core/domain/models/usuario_model.dart';
+import 'package:chiledex_demo/features/auth/presentation/pages/login_page.dart';
+import 'package:chiledex_demo/features/home/presentation/widgets/edit_profile_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+class ProfilePage extends StatefulWidget {
+  final UsuarioModel usuario;
 
-  // Datos estáticos de usuario
-  static const String _nombre = 'Usuario ChileDex';
-  static const String _ubicacion = 'Santiago, Chile';
+  const ProfilePage({super.key, required this.usuario});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final _api = ChiledexApi();
+  late UsuarioModel _usuario;
+  List<AvistamientoModel> _avistamientos = [];
+  List<Map<String, dynamic>> _logros = [];
+  bool _cargando = true;
+
   static const String _titulo = 'Naturalista Experto';
-  static const int _nivel = 4;
-  static const int _ranking = 248;
-  static const int _especies = 127;
-  static const int _avistamientos = 42;
-  static const int _logros = 14;
-  static const int _rachaDias = 5;
 
-  static const List<String> _diasSemana = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-  static const List<bool> _rachaActiva = [true, true, true, true, true, false, false];
+  List<String> get _diasSemana => const ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  List<bool> get _rachaActiva => List.generate(
+        7,
+        (index) => index >= 7 - _usuario.rachaActual.clamp(0, 7),
+      );
+  int get _especies => _avistamientos.map((item) => item.especie).toSet().length;
+  int get _rachaDias => _usuario.rachaActual;
+  List<_InsigniaData> get _insignias => _logros.take(3).map((logro) {
+        return _InsigniaData(
+          icono: Icons.emoji_events_outlined,
+          nombre: logro['nombre']?.toString() ?? 'Logro',
+          fecha: logro['fecha_obtencion']?.toString().split('T').first ?? '',
+        );
+      }).toList();
+  List<String> get _capturas => _avistamientos
+      .map((item) => item.fotografiaUrl)
+      .whereType<String>()
+      .where((url) => url.isNotEmpty)
+      .toList();
+  List<LatLng> get _coordsAvistamientos => _avistamientos
+      .map((item) => item.coordenadas)
+      .whereType<LatLng>()
+      .toList();
 
-  static final List<_InsigniaData> _insignias = [
-    _InsigniaData(icono: Icons.visibility_outlined, nombre: 'Primer Avistamiento', fecha: '22/08/2026'),
-    _InsigniaData(icono: Icons.remove_red_eye_outlined, nombre: 'Ojo de Águila', fecha: '22/08/2026'),
-    _InsigniaData(icono: Icons.eco_outlined, nombre: 'Brote Verde', fecha: '22/08/2026'),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _usuario = widget.usuario;
+    _cargarDatos();
+  }
 
-  static final List<String> _capturas = [
-    'https://reforestemos.org/wp-content/uploads/2025/09/384401781-18388415197033867-431876921902592106-n.jpg',
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Loica_Sturnella_loyca.jpg/640px-Loica_Sturnella_loyca.jpg',
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Jubaea_chilensis_-_Jardin_des_plantes_de_Paris_-_full.jpg/480px-Jubaea_chilensis_-_Jardin_des_plantes_de_Paris_-_full.jpg',
-  ];
+  Future<void> _cargarDatos() async {
+    try {
+      final results = await Future.wait([
+        _api.obtenerAvistamientos(_usuario.id),
+        _api.obtenerLogros(_usuario.id),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _avistamientos = results[0] as List<AvistamientoModel>;
+        _logros = results[1] as List<Map<String, dynamic>>;
+        _cargando = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
 
-  // Coordenadas de avistamientos para el mini mapa
-  static final List<LatLng> _coordsAvistamientos = [
-    const LatLng(-33.4, -70.6),
-    const LatLng(-33.6, -70.4),
-    const LatLng(-33.5, -70.8),
-  ];
+  Future<void> _editarPerfil() async {
+    final updatedUser = await Navigator.of(context).push<UsuarioModel>(
+      MaterialPageRoute(
+        builder: (_) => EditProfileSheet(usuario: _usuario, api: _api),
+      ),
+    );
+    if (updatedUser != null && mounted) {
+      setState(() => _usuario = updatedUser);
+    }
+  }
+
+  Future<void> _cerrarSesion() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cerrar sesión'),
+        content: const Text('¿Quieres salir de tu cuenta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Cerrar sesión'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true || !mounted) return;
+    try {
+      await _api.cerrarSesion(_usuario.id);
+    } catch (_) {
+      // La navegación local también cierra la sesión en el dispositivo.
+    }
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (_) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,8 +129,25 @@ class ProfilePage extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               _buildHeader(),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _cerrarSesion,
+                icon: const Icon(Icons.logout),
+                label: const Text('Cerrar sesión'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.accentOrange,
+                  side: const BorderSide(color: AppTheme.accentOrange),
+                  minimumSize: const Size(double.infinity, 46),
+                ),
+              ),
+              if (_cargando) ...[
+                const SizedBox(height: 12),
+                const LinearProgressIndicator(),
+              ],
               const SizedBox(height: 20),
               _buildStats(),
+              const SizedBox(height: 20),
+              _buildAvistamientos(),
               const SizedBox(height: 20),
               _buildRacha(),
               const SizedBox(height: 20),
@@ -88,7 +183,7 @@ class ProfilePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _nombre,
+                _usuario.nombreCompleto,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -97,7 +192,7 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '$_ubicacion',
+                _usuario.correo,
                 style: TextStyle(fontSize: 12, color: AppTheme.textGray),
               ),
               const SizedBox(height: 6),
@@ -108,7 +203,7 @@ class ProfilePage extends StatelessWidget {
 
         // Botón editar
         IconButton(
-          onPressed: () {},
+          onPressed: _editarPerfil,
           icon: Icon(Icons.edit_outlined, color: AppTheme.textGray, size: 20),
         ),
       ],
@@ -129,9 +224,9 @@ class ProfilePage extends StatelessWidget {
         children: [
           _StatItem(valor: _especies, label: 'Especies'),
           _Divider(),
-          _StatItem(valor: _avistamientos, label: 'Avistamientos'),
+          _StatItem(valor: _avistamientos.length, label: 'Avistamientos'),
           _Divider(),
-          _StatItem(valor: _logros, label: 'Logros'),
+          _StatItem(valor: _logros.length, label: 'Logros'),
         ],
       ),
     );
@@ -231,6 +326,66 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
+  Widget _buildAvistamientos() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'MIS AVISTAMIENTOS',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textGray,
+            letterSpacing: 1.1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (_avistamientos.isEmpty)
+          _ProfileEmptyState(
+            icon: Icons.visibility_outlined,
+            message: 'Todavía no tienes avistamientos registrados.',
+          )
+        else
+          ..._avistamientos.take(5).map(
+                (avistamiento) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE0E0E0)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.pets, color: AppTheme.primaryGreen),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              avistamiento.especie,
+                              style: const TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              avistamiento.fechaFormateada,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textGray,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+      ],
+    );
+  }
+
   // ── Insignias ─────────────────────────────────────────────────────────────
 
   Widget _buildInsignias() {
@@ -263,6 +418,12 @@ class ProfilePage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        if (_insignias.isEmpty)
+          _ProfileEmptyState(
+            icon: Icons.emoji_events_outlined,
+            message: 'Aún no tienes logros desbloqueados.',
+          )
+        else
         Row(
           children: _insignias.map((ins) {
             return Expanded(
@@ -280,7 +441,7 @@ class ProfilePage extends StatelessWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withOpacity(0.1),
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(ins.icono,
@@ -396,7 +557,7 @@ class ProfilePage extends StatelessWidget {
                       if (progress == null) return child;
                       return Container(color: AppTheme.lightGray);
                     },
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       color: AppTheme.lightGray,
                       child: Icon(Icons.image_not_supported_outlined,
                           color: AppTheme.textGray),
@@ -452,5 +613,34 @@ class _Divider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(width: 1, height: 40, color: const Color(0xFFE0E0E0));
+  }
+}
+
+class _ProfileEmptyState extends StatelessWidget {
+  final IconData icon;
+  final String message;
+
+  const _ProfileEmptyState({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppTheme.textGray),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(message, style: TextStyle(color: AppTheme.textGray)),
+          ),
+        ],
+      ),
+    );
   }
 }

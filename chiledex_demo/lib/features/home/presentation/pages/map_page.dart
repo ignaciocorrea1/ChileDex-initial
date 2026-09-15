@@ -1,13 +1,13 @@
 import 'package:chiledex_demo/app/theme/app_theme.dart';
+import 'package:chiledex_demo/core/data/services/chiledex_api.dart';
+import 'package:chiledex_demo/core/domain/models/avistamiento_model.dart';
+import 'package:chiledex_demo/core/domain/models/usuario_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 
-// ── Modelo de avistamiento ────────────────────────────────────────────────────
-// Cuando se conecte la BD, este modelo se reemplaza por el modelo real
-// que venga del repositorio de avistamientos
 class AvistamientoMock {
   final String especie;
   final String nombreCientifico;
@@ -28,9 +28,10 @@ class AvistamientoMock {
   });
 }
 
-// ── MapPage ───────────────────────────────────────────────────────────────────
 class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+  final UsuarioModel usuario;
+
+  const MapPage({super.key, required this.usuario});
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -40,14 +41,17 @@ class _MapPageState extends State<MapPage> {
   static const LatLng _chileCentro = LatLng(-35.6751, -71.5430);
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
+  final _api = ChiledexApi();
 
   LatLng? _ubicacionUsuario;
   bool _cargandoUbicacion = false;
   bool _sinResultados = false;
   String _searchQuery = '';
+  List<AvistamientoMock> _avistamientosUsuario = [];
+  bool _cargandoAvistamientos = true;
 
-  // ── Datos hardcodeados ────────────────────────────────────────────────────
-  // Cuando se conecte la BD, esta lista vendrá del repositorio de avistamientos
+  // Datos de demostración antiguos, conservados solo para referencia visual.
+  // La pantalla usa exclusivamente _avistamientosUsuario.
   static final List<AvistamientoMock> _avistamientos = [
     AvistamientoMock(
       especie: 'Cóndor Andino',
@@ -99,7 +103,36 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    _cargarAvistamientos();
     _obtenerUbicacion();
+  }
+
+  Future<void> _cargarAvistamientos() async {
+    try {
+      final avistamientos = await _api.obtenerAvistamientos(widget.usuario.id);
+      if (!mounted) return;
+      setState(() {
+        _avistamientosUsuario = avistamientos
+            .where((item) => item.coordenadas != null)
+            .map(_convertirAvistamiento)
+            .toList();
+        _cargandoAvistamientos = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _cargandoAvistamientos = false);
+    }
+  }
+
+  AvistamientoMock _convertirAvistamiento(AvistamientoModel item) {
+    return AvistamientoMock(
+      especie: item.especie,
+      nombreCientifico: item.nombreCientifico,
+      estadoConservacion: 'Registrado',
+      zona: 'Avistamiento del usuario',
+      coordenadas: item.coordenadas!,
+      imagenUrl: item.fotografiaUrl ?? '',
+      fecha: item.fechaFormateada,
+    );
   }
 
   @override
@@ -141,7 +174,7 @@ class _MapPageState extends State<MapPage> {
       setState(() => _sinResultados = false);
       return;
     }
-    final hayResultados = _avistamientos.any(
+    final hayResultados = _avistamientosUsuario.any(
       (a) =>
           a.zona.toLowerCase().contains(query.toLowerCase()) ||
           a.especie.toLowerCase().contains(query.toLowerCase()),
@@ -159,8 +192,8 @@ class _MapPageState extends State<MapPage> {
 
   // ── Filtrar avistamientos según búsqueda ──────────────────────────────────
   List<AvistamientoMock> get _avistamientosFiltrados {
-    if (_searchQuery.isEmpty) return _avistamientos;
-    return _avistamientos
+    if (_searchQuery.isEmpty) return _avistamientosUsuario;
+    return _avistamientosUsuario
         .where(
           (a) =>
               a.zona.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -221,7 +254,7 @@ class _MapPageState extends State<MapPage> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -250,7 +283,7 @@ class _MapPageState extends State<MapPage> {
                               width: 48,
                               height: 48,
                               decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.15),
+                                color: Colors.blue.withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -266,7 +299,7 @@ class _MapPageState extends State<MapPage> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.blue.withOpacity(0.4),
+                                    color: Colors.blue.withValues(alpha: 0.4),
                                     blurRadius: 8,
                                   ),
                                 ],
@@ -291,7 +324,7 @@ class _MapPageState extends State<MapPage> {
                   color: AppTheme.backgroundCream,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 8,
                     ),
                   ],
@@ -308,6 +341,11 @@ class _MapPageState extends State<MapPage> {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
+                    if (_cargandoAvistamientos)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: LinearProgressIndicator(),
+                      ),
                     const SizedBox(height: 10),
                   ],
                 ),
@@ -325,7 +363,7 @@ class _MapPageState extends State<MapPage> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 16,
                         offset: const Offset(0, 4),
                       ),
@@ -338,7 +376,7 @@ class _MapPageState extends State<MapPage> {
                         width: 64,
                         height: 64,
                         decoration: BoxDecoration(
-                          color: AppTheme.accentOrange.withOpacity(0.1),
+                          color: AppTheme.accentOrange.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -461,7 +499,7 @@ class _MapFAB extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -528,7 +566,7 @@ class _AvistamientoSheet extends StatelessWidget {
                     ),
                   );
                 },
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (_, _, _) => Container(
                   color: AppTheme.lightGray,
                   child: Icon(
                     Icons.image_not_supported_outlined,
@@ -556,7 +594,7 @@ class _AvistamientoSheet extends StatelessWidget {
                         child: Image.network(
                           avistamiento.imagenUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (_, _, _) =>
                               Container(color: AppTheme.lightGray),
                         ),
                       ),
@@ -585,7 +623,7 @@ class _AvistamientoSheet extends StatelessWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: colorEstado.withOpacity(0.12),
+                                  color: colorEstado.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(

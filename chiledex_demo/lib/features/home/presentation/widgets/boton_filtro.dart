@@ -156,7 +156,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Color(e['color'] as int).withOpacity(0.15),
+                        color: Color(e['color'] as int).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(

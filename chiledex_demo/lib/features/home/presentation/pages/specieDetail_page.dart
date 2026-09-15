@@ -54,7 +54,7 @@ class EspecieDetailPage extends StatelessWidget {
                         if (progress == null) return child;
                         return Container(color: AppTheme.primaryGreen);
                       },
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         color: AppTheme.lightGray,
                         child: Icon(Icons.image_not_supported_outlined,
                             color: AppTheme.textGray, size: 48),
@@ -106,7 +106,7 @@ class EspecieDetailPage extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: colorEstado.withOpacity(0.12),
+                              color: colorEstado.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -123,7 +123,7 @@ class EspecieDetailPage extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryGreen.withOpacity(0.1),
+                              color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -172,7 +172,7 @@ class EspecieDetailPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.lightGray.withOpacity(0.4),
+                      color: AppTheme.lightGray.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
@@ -182,7 +182,7 @@ class EspecieDetailPage extends StatelessWidget {
                           width: 48,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withOpacity(0.15),
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(

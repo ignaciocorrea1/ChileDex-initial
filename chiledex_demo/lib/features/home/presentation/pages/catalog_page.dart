@@ -1,5 +1,5 @@
 import 'package:chiledex_demo/core/domain/models/catalogo_filtro_model.dart';
-import 'package:chiledex_demo/core/domain/models/especie_fotografia_model.dart';
+import 'package:chiledex_demo/core/data/services/chiledex_api.dart';
 import 'package:chiledex_demo/core/domain/models/especie_model.dart';
 import 'package:chiledex_demo/features/home/presentation/pages/specieDetail_page.dart';
 import 'package:chiledex_demo/features/home/presentation/widgets/boton_filtro.dart';
@@ -23,9 +23,13 @@ class CatalogPage extends StatefulWidget {
 
 class _CatalogPageState extends State<CatalogPage> {
   final _searchController = TextEditingController();
+  final _api = ChiledexApi();
   String _searchQuery = '';
-  String _activeCategory = 'Todas';        // <- esto se sobreescribe en initState
+  String _activeCategory = 'Todas';
   CatalogFilterModel _activeFilter = const CatalogFilterModel();
+  List<EspecieModel> _allSpecies = [];
+  bool _isLoading = true;
+  String? _loadError;
 
   // initState se ejecuta una sola vez cuando la pantalla se crea
   // Aquí tomamos la categoría que viene desde HomePage (si existe)
@@ -33,158 +37,25 @@ class _CatalogPageState extends State<CatalogPage> {
   void initState() {
     super.initState();
     _activeCategory = widget.categoriaInicial ?? 'Todas';
+    _loadSpecies();
   }
 
-  // ─────────────────────────────────────────────
-  // DATOS HARDCODEADOS
-  // Cuando se conecte la BD, esta lista se reemplaza
-  // por la respuesta del repositorio de especies
-  // ─────────────────────────────────────────────
-  static final List<EspecieModel> _allSpecies = [
-    EspecieModel(
-      id: 1,
-      nombreComun: 'Loica',
-      nombreCientifico: 'Sturnella loyca',
-      descripcion: 'Ave de pecho rojo característica de Chile.',
-      categoria: 'Aves',
-      estadoConservacion: 'Común',
-      origen: 'Nativa',
-      zonaGeografica: 'Zona Central y Sur',
-      idEspecie: 1,
-      habitat: 'Pastizales',
-      fotografias: [
-        EspecieFotografiaModel(
-          id: 1,
-          idEspecie: 1,
-          url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcJ-0VvgAXf_36xe4Rvt_hrAo58VhASIHwGfiLMAi69E0bFu0OwzHVa8ABjUr1afXUpDYBIOxWy6G_5rQq4spV8GS6hyEsQhFi13O2oEPZGQ&s=10',
-          orden: 1,
-        ),
-      ],
-    ),
-    EspecieModel(
-      id: 2,
-      idEspecie: 2,
-      nombreComun: 'Pudú',
-      nombreCientifico: 'Pudu puda',
-      descripcion: 'El ciervo más pequeño del mundo.',
-      categoria: 'Mamíferos',
-      estadoConservacion: 'Vulnerable',
-      origen: 'Nativa',
-      tamanio: '35 - 45 cm',
-      peso: '6 - 12 kg',
-      zonaGeografica: 'Zona Sur',
-      habitat: 'Bosque Templado',
-      fotografias: [
-        EspecieFotografiaModel(
-          id: 1,
-          idEspecie: 1,
-          url: 'https://reforestemos.org/wp-content/uploads/2025/09/384401781-18388415197033867-431876921902592106-n.jpg',
-          orden: 1,
-        ),
-      ],
-    ),
-    EspecieModel(
-      id: 3,
-      idEspecie: 3,
-      nombreComun: 'Cóndor Andino',
-      nombreCientifico: 'Vultur gryphus',
-      descripcion: 'El ave voladora más grande del mundo.',
-      categoria: 'Aves',
-      estadoConservacion: 'Vulnerable',
-      origen: 'Nativa',
-      zonaGeografica: 'Cordillera de los Andes',
-      habitat: 'Alturas',
-      fotografias: [
-        EspecieFotografiaModel(
-          id: 1,
-          idEspecie: 1,
-          url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSD27-yyDH7KMUlJA7G64LHZ1_mJEu2Ud3yCmPFJBPldw&s',
-          orden: 1,
-        ),
-      ],
-    ),
-    EspecieModel(
-      id: 4,
-      idEspecie: 4,
-      nombreComun: 'Monito del Monte',
-      nombreCientifico: 'Dromiciops gliroides',
-      descripcion: 'Único marsupial de la familia Microbiotheriidae.',
-      categoria: 'Mamíferos',
-      estadoConservacion: 'En Peligro',
-      origen: 'Endémica',
-      zonaGeografica: 'Bosque Valdiviano',
-      habitat: 'Árboles',
-      fotografias: [
-        EspecieFotografiaModel(
-          id: 1,
-          idEspecie: 1,
-          url:
-              'https://www.reporteagricola.cl/files/691395ab24e99_1200x719.jpg',
-          orden: 1,
-        ),
-      ],
-    ),
-    EspecieModel(
-      id: 5,
-      idEspecie: 5,
-      nombreComun: 'Ranita de Darwin',
-      nombreCientifico: 'Rhinoderma darwinii',
-      descripcion: 'Anfibio endémico del bosque templado.',
-      categoria: 'Reptiles',
-      estadoConservacion: 'En Peligro',
-      origen: 'Endémica',
-      zonaGeografica: 'Zona Sur',
-      habitat: 'Vertientes y Hojarasca',
-      fotografias: [
-        EspecieFotografiaModel(
-          id: 1,
-          idEspecie: 1,
-          url: 'https://imagenes.elpais.com/resizer/v2/4DTRZHZ3VBCNNP2CFVCCDRU4CE.JPG?auth=2224ae7b6a745406d5475720a7003952bdf892739e266c6980fb53bb7cd4604f&width=980&height=980&focal=2172%2C1439',
-          orden: 1,
-        ),
-      ],
-    ),
-    EspecieModel(
-      id: 6,
-      idEspecie: 6,
-      nombreComun: 'Zorro Chilla',
-      nombreCientifico: 'Lycalopex griseus',
-      descripcion: 'Zorro pequeño de la estepa patagónica.',
-      categoria: 'Mamíferos',
-      estadoConservacion: 'Común',
-      origen: 'Nativa',
-      zonaGeografica: 'Estepa Patagónica y Matorral',
-      habitat: 'Matorral',
-      fotografias: [
-        EspecieFotografiaModel(
-          id: 1,
-          idEspecie: 1,
-          url: 'https://parquevallelosulmos.cl/calbuco/wp-content/uploads/2018/10/zorrochilla.jpg',
-          orden: 1,
-        ),
-      ],
-    ),
-    EspecieModel(
-      id: 7,
-      idEspecie: 7,
-      nombreComun: 'Araña Pollito',
-      nombreCientifico: 'Grammostola rosea',
-      descripcion: 'Tarántula del norte y centro de Chile.',
-      categoria: 'Reptiles',
-      estadoConservacion: 'Común',
-      origen: 'Nativa',
-      zonaGeografica: 'Norte y Centro',
-      habitat: 'Áreas Secas',
-      fotografias: [
-        EspecieFotografiaModel(
-          id: 1,
-          idEspecie: 1,
-          url: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Grammostola_rosea_adult_weiblich.jpg?utm_source=es.wikipedia.org&utm_campaign=index&utm_content=original',
-          orden: 1,
-        ),
-      ],
-    ),
-  ];
+  Future<void> _loadSpecies() async {
+    try {
+      final species = await _api.obtenerEspecies();
+      if (!mounted) return;
+      setState(() {
+        _allSpecies = species;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadError = error.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -269,7 +140,7 @@ class _CatalogPageState extends State<CatalogPage> {
                 ),
               ),
               Text(
-                '450 Especies registradas en Chile',
+                '${_allSpecies.length} especies registradas en Chile',
                 style: TextStyle(fontSize: 13, color: AppTheme.textGray),
               ),
               const SizedBox(height: 16),
@@ -366,7 +237,17 @@ class _CatalogPageState extends State<CatalogPage> {
 
               // Lista de especies o estado vacío
               Expanded(
-                child: species.isEmpty
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _loadError != null
+                    ? Center(
+                        child: Text(
+                          _loadError!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppTheme.textGray),
+                        ),
+                      )
+                    : species.isEmpty
                     ? const EmptyCatalogState()
                     : ListView.builder(
                         itemCount: species.length,

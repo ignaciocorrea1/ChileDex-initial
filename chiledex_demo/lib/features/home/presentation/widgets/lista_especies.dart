@@ -17,7 +17,7 @@ class SpeciesListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String? imageUrl =
-        (species.fotografias?.isNotEmpty ?? false) ? species.fotografias!.first.url : null;
+        (species.fotografias.isNotEmpty ?? false) ? species.fotografias.first.url : null;
 
     return GestureDetector(
       onTap: onTap,
@@ -66,6 +66,8 @@ class SpeciesListTile extends StatelessWidget {
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     // Nombre científico
@@ -76,16 +78,19 @@ class SpeciesListTile extends StatelessWidget {
                         fontStyle: FontStyle.italic,
                         color: AppTheme.textGray,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
                     // Chips: categoría + estado de conservación
-                    Row(
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
                       children: [
                         _Chip(
                           label: species.categoria,
                           color: AppTheme.primaryGreen,
                         ),
-                        const SizedBox(width: 6),
                         _Chip(
                           label: species.estadoConservacion,
                           color: _conservationColor(species.estadoConservacion),
@@ -149,7 +154,7 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -159,6 +164,8 @@ class _Chip extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: color,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:chiledex_demo/features/home/presentation/pages/catalog_page.dart';
 import 'package:chiledex_demo/app/navigation/bottom_navbar.dart';
 import 'package:chiledex_demo/features/home/presentation/pages/home_page.dart';
+import 'package:chiledex_demo/core/domain/models/usuario_model.dart';
 
 class MainScaffold extends StatefulWidget {
-  const MainScaffold({super.key});
+  final UsuarioModel usuario;
+
+  const MainScaffold({super.key, required this.usuario});
 
   // Permite acceder al estado desde fuera con MainScaffold.of(context)
   static _MainScaffoldState of(BuildContext context) {
@@ -34,8 +37,8 @@ class _MainScaffoldState extends State<MainScaffold> {
     const HomePage(),
     CatalogPage(categoriaInicial: _catalogCategoria),
     const Placeholder(),
-    const MapPage(),
-    const ProfilePage(),
+    MapPage(usuario: widget.usuario),
+    ProfilePage(usuario: widget.usuario),
   ];
 
   @override

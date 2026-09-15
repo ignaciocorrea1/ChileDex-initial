@@ -14,7 +14,7 @@ class EmptyCatalogState extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withOpacity(0.08),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(
