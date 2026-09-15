@@ -1,8 +1,11 @@
+import 'package:chiledex_demo/app/navigation/main_scaffold.dart';
 import 'package:chiledex_demo/app/theme/app_theme.dart';
 import 'package:chiledex_demo/core/domain/models/ecosistema_model.dart';
 import 'package:chiledex_demo/core/domain/models/especie_fotografia_model.dart';
 import 'package:chiledex_demo/core/domain/models/especie_model.dart';
+import 'package:chiledex_demo/features/home/presentation/pages/specieDetail_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -17,6 +20,10 @@ class HomePage extends StatelessWidget {
       categoria: 'Mamífero',
       estadoConservacion: 'Vulnerable',
       zonaGeografica: 'Zona Sur',
+      tamanio: '100 - 120 cm',
+      peso: '10 - 20 kg',
+      origen: 'Nativa',
+      habitat: 'Bosque Templado',
       idEspecie: 1,
       fotografias: [
         EspecieFotografiaModel(
@@ -35,6 +42,10 @@ class HomePage extends StatelessWidget {
       categoria: 'Ave Magna',
       estadoConservacion: 'Vulnerable',
       zonaGeografica: 'Cordillera de los Andes',
+      tamanio: '140 - 160 cm',
+      peso: '5 - 10 kg',
+      origen: 'Nativa',
+      habitat: 'Bosque Templado',
       idEspecie: 2,
       fotografias: [
         EspecieFotografiaModel(
@@ -53,6 +64,10 @@ class HomePage extends StatelessWidget {
       categoria: 'Marsupial',
       estadoConservacion: 'En Peligro',
       zonaGeografica: 'Zona Sur',
+      tamanio: '20 - 30 cm',
+      peso: '40 - 60 gr',
+      origen: 'Nativa',
+      habitat: 'Bosque Templado',
       idEspecie: 3,
       fotografias: [
         EspecieFotografiaModel(
@@ -90,6 +105,12 @@ class HomePage extends StatelessWidget {
       contadorEspecies: 145,
       imagenURL: 'https://admin.kunapak.com/uploads/imagenes/a0e4bf21d24b652a518c3921d4e8145a0753cb49.jpg',
     ),
+    EcosistemaModel(
+      id: 5,
+      nombre: 'Santuario',
+      contadorEspecies: 404,
+      imagenURL: 'https://st5.depositphotos.com/2863241/68062/i/450/depositphotos_680620534-stock-photo-giraffe-head-neck-background-trees.jpg',
+    ),
   ];
 
   // Interfaz completa del home
@@ -97,49 +118,23 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        // Evita que el contenido se superponga
-
         child: SingleChildScrollView(
-          // Scroll en la pantalla
-
-          padding: const EdgeInsets.symmetric(horizontal: 20), // Padding
-
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
-            // Una unica columna para todo el contenido
-
-            crossAxisAlignment:
-                CrossAxisAlignment.start, // Alineación a la izquierda,
-
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(
-                height: 20,
-              ), // Espacio entre el borde superior y el titulo
-
-              const Text(
-                // Titulo
-                'Ecosistemas',
-                style: TextStyle(
+              const SizedBox(height: 20),
+              Text(
+                'CHILEDEX',
+                style: GoogleFonts.outfit(
                   fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ), // Estilos del titulo
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-
-              const SizedBox(
-                height: 16,
-              ), // Espacio entre el titulo y la barra de busqueda
-
-              _buildSearchBar(), // Barra de busqueda
-
-              const SizedBox(
-                height: 24,
-              ), // Espacio entre la barra de busqueda y las especies destacadas
-
-              _buildFeaturedSpecies(), // Especies destacadas
-
-              const SizedBox(height: 24), // Espacio entre las especies destacadas y la lista de ecosistemas
-
-              _buildEcosystem(), // Lista de ecosistemas
-
+              const SizedBox(height: 24),
+              _buildFeaturedSpecies(context), // pasa contexto
+              const SizedBox(height: 24),
+              _buildEcosystem(context), // pasa contexto
               const SizedBox(height: 24),
             ],
           ),
@@ -148,67 +143,33 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // Barra de busqueda
-  Widget _buildSearchBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 12,
-      ), // Espaciado interno del contenedor
-
-      decoration: BoxDecoration(
-        // Diseño del contenedor
-        color: AppTheme.cardWhite, // Color del fondo
-
-        borderRadius: BorderRadius.circular(14), // Bordes redondeados
-
-        border: Border.all(color: AppTheme.lightGray), // Color del borde
-      ),
-
-      child: Row(
-        // Input
-        children: [
-          Icon(Icons.search, color: AppTheme.textGray), // Icono de busqueda
-
-          const SizedBox(width: 8), // Espacio entre el icono y el texto
-
-          Text(
-            // Texto de busqueda
-            'Buscar especie, planta o insecto...',
-            style: TextStyle(color: AppTheme.textGray, fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Especies destacadas
-  Widget _buildFeaturedSpecies() {
+  Widget _buildFeaturedSpecies(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start, // Alineación a la izquierda
-
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Especies destacadas',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.outfit(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
             color: AppTheme.textGray,
-            letterSpacing: 1.2,
           ),
         ),
-
-        const SizedBox(
-          height: 8,
-        ), // Espacio entre el titulo y la lista de especies
-
+        const SizedBox(height: 8),
         SingleChildScrollView(
-          scrollDirection: Axis.horizontal, // Scroll horizontal
-
+          scrollDirection: Axis.horizontal,
           child: Row(
-            // Se mapean las especies y se pasan a una card
             children: _especies.map((especie) {
-              return _EspeciesCard(especie: especie);
+              return _EspeciesCard(
+                especie: especie,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EspecieDetailPage(especie: especie),
+                  ),
+                ),
+              );
             }).toList(),
           ),
         ),
@@ -217,23 +178,23 @@ class HomePage extends StatelessWidget {
   }
 
   // Ecosistemas
-  Widget _buildEcosystem() {
+  Widget _buildEcosystem(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start, // Alineación a la izquierda
-
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          // Titulo
+        Text(
           'Ecosistemas',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w900),
         ),
-
-        const SizedBox(height: 12), // Espacio entre el titulo y la lista
-
+        const SizedBox(height: 12),
         Column(
-          // Se mapean los ecosistemas y se pasan a una card
           children: _ecosistemas.map((ecosistema) {
-            return _EcosistemasCard(ecosistema: ecosistema);
+            return _EcosistemasCard(
+              ecosistema: ecosistema,
+              onTap: () =>
+                  MainScaffold.of(context)
+                      .navegarACatalogo(categoria: ecosistema.nombre),
+            );
           }).toList(),
         ),
       ],
@@ -244,96 +205,91 @@ class HomePage extends StatelessWidget {
 // Widget para la card de especie
 class _EspeciesCard extends StatelessWidget {
   final EspecieModel especie;
+  final VoidCallback onTap; // nuevo
 
-  const _EspeciesCard({required this.especie});
+  const _EspeciesCard({
+    required this.especie,
+    required this.onTap, // nuevo
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 130,
-
-      margin: const EdgeInsets.only(right: 12),
-
-      decoration: BoxDecoration(
-        color: AppTheme.cardWhite, // Color del fondo
-
-        borderRadius: BorderRadius.circular(14), // Bordes redondeados
-
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
-
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start, // Alineación a la izquierda
-
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-            child: SizedBox(
-              height: 90,
-              width: double.infinity,
-              child: especie.portada != null
-                  ? Image.network(
-                      especie.portada!,
-                      fit: BoxFit.cover,
-                      // Mientras carga
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          color: AppTheme.lightGray,
-                          child: const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        );
-                      },
-                      // Si falla la URL
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppTheme.lightGray,
-                          child: Icon(
-                            Icons.image_not_supported_outlined,
-                            color: AppTheme.textGray,
-                          ),
-                        );
-                      },
-                    )
-                  : Container(
-                      color: AppTheme.lightGray,
-                      child: Icon(
-                        Icons.image_outlined,
-                        color: AppTheme.textGray,
+    return GestureDetector(
+      onTap: onTap, // nuevo
+      child: Container(
+        width: 130,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.cardWhite,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppTheme.lightGray),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(14),
+              ),
+              child: SizedBox(
+                height: 90,
+                width: double.infinity,
+                child: especie.portada != null
+                    ? Image.network(
+                        especie.portada!,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: AppTheme.lightGray,
+                            child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppTheme.lightGray,
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              color: AppTheme.textGray,
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: AppTheme.lightGray,
+                        child: Icon(
+                          Icons.image_outlined,
+                          color: AppTheme.textGray,
+                        ),
                       ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    especie.nombreComun,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
                     ),
-            ),
-          ),
-
-          Padding(
-            // Padding
-            padding: const EdgeInsets.all(10),
-
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-                Text(
-                  especie.nombreComun,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
                   ),
-                ),
-
-                Text(
-                  especie.categoria,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppTheme.textGray,
+                  Text(
+                    especie.categoria,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.textGray,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -342,117 +298,104 @@ class _EspeciesCard extends StatelessWidget {
 // Widget para la card de ecosistema
 class _EcosistemasCard extends StatelessWidget {
   final EcosistemaModel ecosistema;
+  final VoidCallback onTap; // nuevo
 
-  const _EcosistemasCard({required this.ecosistema});
+  const _EcosistemasCard({
+    required this.ecosistema,
+    required this.onTap, // nuevo
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 130,
-
-      width: double.infinity,
-
-      margin: const EdgeInsets.only(bottom: 14),
-
-      decoration: BoxDecoration(
-        color: AppTheme.primaryGreen,
-
-        borderRadius: BorderRadius.circular(16),
-      ),
-
-      child: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: SizedBox(
-              height: double.infinity,
-              width: double.infinity,
-              child: ecosistema.imagenURL != null
-                  ? Image.network(
-                      ecosistema.imagenURL!,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(color: AppTheme.primaryGreen);
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppTheme.primaryGreen,
-                          child: Icon(
-                            Icons.image_not_supported_outlined,
-                            color: Colors.white38,
-                            size: 48,
-                          ),
-                        );
-                      },
-                    )
-                  : Container(color: AppTheme.primaryGreen),
+    return GestureDetector(
+      onTap: onTap, // nuevo
+      child: Container(
+        height: 130,
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          color: AppTheme.primaryGreen,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: SizedBox(
+                height: double.infinity,
+                width: double.infinity,
+                child: ecosistema.imagenURL != null
+                    ? Image.network(
+                        ecosistema.imagenURL!,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(color: AppTheme.primaryGreen);
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppTheme.primaryGreen,
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              color: Colors.white38,
+                              size: 48,
+                            ),
+                          );
+                        },
+                      )
+                    : Container(color: AppTheme.primaryGreen),
+              ),
             ),
-          ),
-
-          ClipRRect(
-            // Gradiente sobre la imagen
-            // Recorte de la imagen para que tenga bordes redondeados
-            borderRadius: BorderRadius.circular(16),
-
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerRight,
-
-                  end: Alignment.centerLeft,
-
-                  colors: [Colors.transparent, AppTheme.textGray],
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerRight,
+                    end: Alignment.centerLeft,
+                    colors: [Colors.transparent, AppTheme.textGray],
+                  ),
                 ),
               ),
             ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(18),
-
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              mainAxisAlignment: MainAxisAlignment.end,
-
-              children: [
-                Text(
-                  ecosistema.nombre,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-
-                  child: Text(
-                    '${ecosistema.contadorEspecies} Especies',
-
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textDark,
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    ecosistema.nombre,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${ecosistema.contadorEspecies} Especies',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

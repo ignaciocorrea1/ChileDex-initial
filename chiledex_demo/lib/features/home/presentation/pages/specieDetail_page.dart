@@ -27,7 +27,7 @@ class EspecieDetailPage extends StatelessWidget {
     final colorEstado = _colorEstado(especie.estadoConservacion);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.backgroundCream,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -45,19 +45,6 @@ class EspecieDetailPage extends StatelessWidget {
                 child: const Icon(Icons.arrow_back, color: Colors.white),
               ),
             ),
-            actions: [
-              Container(
-                margin: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: Colors.black26,
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.ios_share, color: Colors.white, size: 18),
-                  onPressed: () {},
-                ),
-              ),
-            ],
             flexibleSpace: FlexibleSpaceBar(
               background: especie.portada != null
                   ? Image.network(

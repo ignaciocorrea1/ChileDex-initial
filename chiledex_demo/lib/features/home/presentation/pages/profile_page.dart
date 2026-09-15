@@ -7,7 +7,7 @@ class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   // Datos estáticos de usuario
-  static const String _nombre = 'Natalia Silva';
+  static const String _nombre = 'Usuario ChileDex';
   static const String _ubicacion = 'Santiago, Chile';
   static const String _titulo = 'Naturalista Experto';
   static const int _nivel = 4;
@@ -58,10 +58,6 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(height: 20),
               _buildInsignias(),
               const SizedBox(height: 20),
-              _buildMiniMapa(),
-              const SizedBox(height: 20),
-              _buildCapturas(),
-              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -101,24 +97,11 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '$_ubicacion · $_titulo',
+                '$_ubicacion',
                 style: TextStyle(fontSize: 12, color: AppTheme.textGray),
               ),
               const SizedBox(height: 6),
-              Row(
-                children: [
-                  const Icon(Icons.location_on, size: 14, color: Color(0xFFD9534F)),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Nivel $_nivel · #$_ranking en Ranking',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFD9534F),
-                    ),
-                  ),
-                ],
-              ),
+              
             ],
           ),
         ),
@@ -258,7 +241,7 @@ class ProfilePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'INSIGNIAS DE CAMPO',
+              'MIS LOGROS',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,

@@ -1,33 +1,63 @@
-import 'package:chiledex_demo/app/theme/app_theme.dart';
+import 'package:chiledex_demo/core/domain/models/catalogo_filtro_model.dart';
 import 'package:chiledex_demo/core/domain/models/especie_fotografia_model.dart';
 import 'package:chiledex_demo/core/domain/models/especie_model.dart';
 import 'package:chiledex_demo/features/home/presentation/pages/specieDetail_page.dart';
+import 'package:chiledex_demo/features/home/presentation/widgets/boton_filtro.dart';
+import 'package:chiledex_demo/features/home/presentation/widgets/catalogo_barra_busqueda.dart';
+import 'package:chiledex_demo/features/home/presentation/widgets/catalogo_filtro.dart';
+import 'package:chiledex_demo/features/home/presentation/widgets/catalogo_vacio.dart';
+import 'package:chiledex_demo/features/home/presentation/widgets/lista_especies.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../../app/theme/app_theme.dart';
 
 class CatalogPage extends StatefulWidget {
-  const CatalogPage({super.key});
+  final String? categoriaInicial; // nueva propiedad
+
+  const CatalogPage({super.key, this.categoriaInicial});
 
   @override
   State<CatalogPage> createState() => _CatalogPageState();
 }
 
 class _CatalogPageState extends State<CatalogPage> {
-  static final List<EspecieModel> _especies = [
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+  String _activeCategory = 'Todas';        // <- esto se sobreescribe en initState
+  CatalogFilterModel _activeFilter = const CatalogFilterModel();
+
+  // initState se ejecuta una sola vez cuando la pantalla se crea
+  // Aquí tomamos la categoría que viene desde HomePage (si existe)
+  @override
+  void initState() {
+    super.initState();
+    _activeCategory = widget.categoriaInicial ?? 'Todas';
+  }
+
+  // ─────────────────────────────────────────────
+  // DATOS HARDCODEADOS
+  // Cuando se conecte la BD, esta lista se reemplaza
+  // por la respuesta del repositorio de especies
+  // ─────────────────────────────────────────────
+  static final List<EspecieModel> _allSpecies = [
     EspecieModel(
       id: 1,
-      idEspecie: 1,
       nombreComun: 'Loica',
       nombreCientifico: 'Sturnella loyca',
-      descripcion: 'Ave de pecho rojo característica de los campos chilenos.',
-      categoria: 'Ave',
+      descripcion: 'Ave de pecho rojo característica de Chile.',
+      categoria: 'Aves',
       estadoConservacion: 'Común',
+      origen: 'Nativa',
       zonaGeografica: 'Zona Central y Sur',
+      idEspecie: 1,
+      habitat: 'Pastizales',
       fotografias: [
         EspecieFotografiaModel(
           id: 1,
           idEspecie: 1,
+          url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcJ-0VvgAXf_36xe4Rvt_hrAo58VhASIHwGfiLMAi69E0bFu0OwzHVa8ABjUr1afXUpDYBIOxWy6G_5rQq4spV8GS6hyEsQhFi13O2oEPZGQ&s=10',
           orden: 1,
-          url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRXg0E0LP4goXweCFFn7z5T5r1Kf4bOlY_voTaunvBqSA&s=10',
         ),
       ],
     ),
@@ -37,15 +67,19 @@ class _CatalogPageState extends State<CatalogPage> {
       nombreComun: 'Pudú',
       nombreCientifico: 'Pudu puda',
       descripcion: 'El ciervo más pequeño del mundo.',
-      categoria: 'Mamífero',
+      categoria: 'Mamíferos',
       estadoConservacion: 'Vulnerable',
+      origen: 'Nativa',
+      tamanio: '35 - 45 cm',
+      peso: '6 - 12 kg',
       zonaGeografica: 'Zona Sur',
+      habitat: 'Bosque Templado',
       fotografias: [
         EspecieFotografiaModel(
           id: 1,
-          idEspecie: 2,
-          orden: 1,
+          idEspecie: 1,
           url: 'https://reforestemos.org/wp-content/uploads/2025/09/384401781-18388415197033867-431876921902592106-n.jpg',
+          orden: 1,
         ),
       ],
     ),
@@ -55,15 +89,17 @@ class _CatalogPageState extends State<CatalogPage> {
       nombreComun: 'Cóndor Andino',
       nombreCientifico: 'Vultur gryphus',
       descripcion: 'El ave voladora más grande del mundo.',
-      categoria: 'Ave',
+      categoria: 'Aves',
       estadoConservacion: 'Vulnerable',
+      origen: 'Nativa',
       zonaGeografica: 'Cordillera de los Andes',
+      habitat: 'Alturas',
       fotografias: [
         EspecieFotografiaModel(
           id: 1,
-          idEspecie: 3,
+          idEspecie: 1,
+          url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSD27-yyDH7KMUlJA7G64LHZ1_mJEu2Ud3yCmPFJBPldw&s',
           orden: 1,
-          url: 'https://static.wikia.nocookie.net/reinoanimalia/images/d/d1/Andean_condor_by_Alamy.jpg/revision/latest/thumbnail/width/360/height/360?cb=20250902201815&path-prefix=es',
         ),
       ],
     ),
@@ -72,16 +108,19 @@ class _CatalogPageState extends State<CatalogPage> {
       idEspecie: 4,
       nombreComun: 'Monito del Monte',
       nombreCientifico: 'Dromiciops gliroides',
-      descripcion: 'Único marsupial viviente de la familia Microbiotheriidae.',
-      categoria: 'Mamífero',
+      descripcion: 'Único marsupial de la familia Microbiotheriidae.',
+      categoria: 'Mamíferos',
       estadoConservacion: 'En Peligro',
+      origen: 'Endémica',
       zonaGeografica: 'Bosque Valdiviano',
+      habitat: 'Árboles',
       fotografias: [
         EspecieFotografiaModel(
           id: 1,
-          idEspecie: 4,
+          idEspecie: 1,
+          url:
+              'https://www.reporteagricola.cl/files/691395ab24e99_1200x719.jpg',
           orden: 1,
-          url: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Monito_del_Monte_ps6.jpg',
         ),
       ],
     ),
@@ -90,16 +129,18 @@ class _CatalogPageState extends State<CatalogPage> {
       idEspecie: 5,
       nombreComun: 'Ranita de Darwin',
       nombreCientifico: 'Rhinoderma darwinii',
-      descripcion: 'Pequeño anfibio endémico del bosque templado.',
-      categoria: 'Anfibio',
+      descripcion: 'Anfibio endémico del bosque templado.',
+      categoria: 'Reptiles',
       estadoConservacion: 'En Peligro',
+      origen: 'Endémica',
       zonaGeografica: 'Zona Sur',
+      habitat: 'Vertientes y Hojarasca',
       fotografias: [
         EspecieFotografiaModel(
           id: 1,
-          idEspecie: 5,
-          orden: 1,
+          idEspecie: 1,
           url: 'https://imagenes.elpais.com/resizer/v2/4DTRZHZ3VBCNNP2CFVCCDRU4CE.JPG?auth=2224ae7b6a745406d5475720a7003952bdf892739e266c6980fb53bb7cd4604f&width=980&height=980&focal=2172%2C1439',
+          orden: 1,
         ),
       ],
     ),
@@ -108,66 +149,42 @@ class _CatalogPageState extends State<CatalogPage> {
       idEspecie: 6,
       nombreComun: 'Zorro Chilla',
       nombreCientifico: 'Lycalopex griseus',
-      descripcion: 'Zorro gris de tamaño mediano muy distribuido en Chile.',
-      categoria: 'Mamífero',
+      descripcion: 'Zorro pequeño de la estepa patagónica.',
+      categoria: 'Mamíferos',
       estadoConservacion: 'Común',
-      zonaGeografica: 'Estepa Patagónica',
+      origen: 'Nativa',
+      zonaGeografica: 'Estepa Patagónica y Matorral',
+      habitat: 'Matorral',
       fotografias: [
         EspecieFotografiaModel(
           id: 1,
-          idEspecie: 6,
+          idEspecie: 1,
+          url: 'https://parquevallelosulmos.cl/calbuco/wp-content/uploads/2018/10/zorrochilla.jpg',
           orden: 1,
-          url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw6Q-h7lq7vlRrsXUMzCHnPDEKMkkj26hrHvuZ_5bj_2rKyhtAEOA0bSFj&s=10',
         ),
       ],
     ),
     EspecieModel(
       id: 7,
       idEspecie: 7,
-      nombreComun: 'Huemul',
-      nombreCientifico: 'Hippocamelus bisulcus',
-      descripcion: 'Ciervo andino patagónico, símbolo del escudo de Chile.',
-      categoria: 'Mamífero',
-      estadoConservacion: 'En Peligro Crítico',
-      zonaGeografica: 'Patagonia',
+      nombreComun: 'Araña Pollito',
+      nombreCientifico: 'Grammostola rosea',
+      descripcion: 'Tarántula del norte y centro de Chile.',
+      categoria: 'Reptiles',
+      estadoConservacion: 'Común',
+      origen: 'Nativa',
+      zonaGeografica: 'Norte y Centro',
+      habitat: 'Áreas Secas',
       fotografias: [
         EspecieFotografiaModel(
           id: 1,
-          idEspecie: 7,
+          idEspecie: 1,
+          url: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Grammostola_rosea_adult_weiblich.jpg?utm_source=es.wikipedia.org&utm_campaign=index&utm_content=original',
           orden: 1,
-          url: 'https://simbio.mma.gob.cl/PlanesRecoge/DownloadImage/100',
-        ),
-      ],
-    ),
-    EspecieModel(
-      id: 8,
-      idEspecie: 8,
-      nombreComun: 'Palma Chilena',
-      nombreCientifico: 'Jubaea chilensis',
-      descripcion: 'La palmera más austral del mundo, endémica de Chile.',
-      categoria: 'Flora',
-      estadoConservacion: 'Vulnerable',
-      zonaGeografica: 'Zona Central',
-      fotografias: [
-        EspecieFotografiaModel(
-          id: 1,
-          idEspecie: 8,
-          orden: 1,
-          url: 'https://1000genomas.cl/wp-content/uploads/2024/07/Palma-chilena_2-Francisco-Gamboa-2.jpg',
         ),
       ],
     ),
   ];
-
-  // Categorías únicas derivadas de los datos
-  List<String> get _categorias {
-    final cats = _especies.map((e) => e.categoria).toSet().toList()..sort();
-    return ['Todas', ...cats];
-  }
-
-  String _categoriaSeleccionada = 'Todas';
-  String _busqueda = '';
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void dispose() {
@@ -175,342 +192,206 @@ class _CatalogPageState extends State<CatalogPage> {
     super.dispose();
   }
 
-  List<EspecieModel> get _especiesFiltradas {
-    return _especies.where((e) {
-      final coincideCategoria =
-          _categoriaSeleccionada == 'Todas' ||
-          e.categoria == _categoriaSeleccionada;
-      final coincideBusqueda =
-          _busqueda.isEmpty ||
-          e.nombreComun.toLowerCase().contains(_busqueda.toLowerCase()) ||
-          e.nombreCientifico.toLowerCase().contains(_busqueda.toLowerCase()) ||
-          e.zonaGeografica.toLowerCase().contains(_busqueda.toLowerCase());
-      return coincideCategoria && coincideBusqueda;
-    }).toList();
+  // ─────────────────────────────────────────────
+  // Aplica búsqueda, categoría y filtros sobre la lista completa
+  // Cuando haya BD, este método recibirá la lista del repositorio
+  // ─────────────────────────────────────────────
+  List<EspecieModel> get _filteredSpecies {
+    List<EspecieModel> result = _allSpecies;
+
+    // Filtro por búsqueda de texto
+    if (_searchQuery.isNotEmpty) {
+      result = result.where((s) {
+        return s.nombreComun.toLowerCase().contains(
+              _searchQuery.toLowerCase(),
+            ) ||
+            s.nombreCientifico.toLowerCase().contains(
+              _searchQuery.toLowerCase(),
+            );
+      }).toList();
+    }
+
+    // Filtro por categoría del carousel
+    if (_activeCategory != 'Todas') {
+      result = result.where((s) => s.categoria == _activeCategory).toList();
+    }
+
+    // Filtro por estado de conservación
+    if (_activeFilter.estadosConservacion.isNotEmpty) {
+      result = result.where((s) {
+        return _activeFilter.estadosConservacion.contains(s.estadoConservacion);
+      }).toList();
+    }
+
+    // Orden alfabético
+    result.sort(
+      (a, b) => _activeFilter.ordenAlfabetico == 'A-Z'
+          ? a.nombreComun.compareTo(b.nombreComun)
+          : b.nombreComun.compareTo(a.nombreComun),
+    );
+
+    return result;
   }
 
-  Color _colorEstado(String estado) {
-    switch (estado) {
-      case 'Común':
-        return const Color(0xFF4A7C59);
-      case 'Vulnerable':
-        return const Color(0xFFE8A838);
-      case 'En Peligro':
-        return const Color(0xFFD9534F);
-      case 'En Peligro Crítico':
-        return const Color(0xFF8B0000);
-      default:
-        return AppTheme.textGray;
-    }
+  void _openFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => FilterBottomSheet(
+        currentFilter: _activeFilter,
+        onApply: (newFilter) {
+          setState(() => _activeFilter = newFilter);
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final especies = _especiesFiltradas;
+    final species = _filteredSpecies;
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Catálogo de Especies',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_especies.length * 56} especies registradas en Chile',
-                    style: TextStyle(fontSize: 13, color: AppTheme.textGray),
-                  ),
-                  const SizedBox(height: 16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 24),
 
-                  // Barra de búsqueda
-                  _buildSearchBar(),
-
-                  const SizedBox(height: 14),
-                ],
+              // Título
+              Text(
+                'Catálogo de Especies',
+                style: GoogleFonts.outfit(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-            ),
+              Text(
+                '450 Especies registradas en Chile',
+                style: TextStyle(fontSize: 13, color: AppTheme.textGray),
+              ),
+              const SizedBox(height: 16),
 
-            // Chips de categoría
-            SizedBox(
-              height: 38,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _categorias.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (_, i) {
-                  final cat = _categorias[i];
-                  final seleccionada = cat == _categoriaSeleccionada;
-                  return GestureDetector(
-                    onTap: () => setState(() => _categoriaSeleccionada = cat),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
+              // Buscador
+              CatalogSearchBar(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _searchQuery = value),
+              ),
+              const SizedBox(height: 14),
+
+              // Carousel de categorías
+              CategoryFilterBar(
+                activeCategory: _activeCategory,
+                onCategorySelected: (cat) =>
+                    setState(() => _activeCategory = cat),
+              ),
+              const SizedBox(height: 14),
+
+              // Ordenar y filtros
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Botón ordenar A-Z / Z-A
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _activeFilter = _activeFilter.copyWith(
+                          ordenAlfabetico:
+                              _activeFilter.ordenAlfabetico == 'A-Z'
+                              ? 'Z-A'
+                              : 'A-Z',
+                        );
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Text(
+                          'Ordenar por: ',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textGray,
+                          ),
+                        ),
+                        Text(
+                          _activeFilter.ordenAlfabetico,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryGreen,
+                          ),
+                        ),
+                        Icon(
+                          Icons.keyboard_arrow_down,
+                          color: AppTheme.primaryGreen,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Botón filtros
+                  GestureDetector(
+                    onTap: _openFilterSheet,
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
+                        horizontal: 14,
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: seleccionada
-                            ? AppTheme.primaryGreen
-                            : AppTheme.cardWhite,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: seleccionada
-                              ? AppTheme.primaryGreen
-                              : AppTheme.lightGray,
-                        ),
+                        color: AppTheme.cardWhite,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFE0E0E0)),
                       ),
-                      child: Text(
-                        cat,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: seleccionada
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                          color: seleccionada
-                              ? Colors.white
-                              : AppTheme.textGray,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Contador de resultados
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                '${especies.length} resultado${especies.length != 1 ? 's' : ''}',
-                style: TextStyle(fontSize: 12, color: AppTheme.textGray),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Lista
-            Expanded(
-              child: especies.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Row(
                         children: [
-                          Icon(
-                            Icons.search_off,
-                            size: 48,
-                            color: AppTheme.lightGray,
-                          ),
-                          const SizedBox(height: 12),
+                          Icon(Icons.tune, size: 16, color: AppTheme.textDark),
+                          const SizedBox(width: 6),
                           Text(
-                            'Sin resultados',
-                            style: TextStyle(color: AppTheme.textGray),
+                            'Filtros',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textDark,
+                            ),
                           ),
                         ],
                       ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      itemCount: especies.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) => _EspecieTile(
-                        especie: especies[i],
-                        colorEstado: _colorEstado(
-                          especies[i].estadoConservacion,
-                        ),
-                      ),
                     ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 12,
-      ), // Espaciado interno del contenedor
-
-      decoration: BoxDecoration(
-        // Diseño del contenedor
-        color: AppTheme.cardWhite, // Color del fondo
-
-        borderRadius: BorderRadius.circular(14), // Bordes redondeados
-
-        border: Border.all(color: AppTheme.lightGray), // Color del borde
-      ),
-
-      child: Row(
-        // Input
-        children: [
-          Icon(Icons.search, color: AppTheme.textGray), // Icono de busqueda
-
-          const SizedBox(width: 8), // Espacio entre el icono y el texto
-
-          Text(
-            // Texto de busqueda
-            'Buscar especie, planta o insecto...',
-            style: TextStyle(color: AppTheme.textGray, fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Tile de especie ────────────────────────────────────────────────────────────
-
-class _EspecieTile extends StatelessWidget {
-  final EspecieModel especie;
-  final Color colorEstado;
-
-  const _EspecieTile({required this.especie, required this.colorEstado});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.cardWhite,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => EspecieDetailPage(especie: especie),
+                  ),
+                ],
               ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // Imagen
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: SizedBox(
-                    width: 64,
-                    height: 64,
-                    child: especie.portada != null
-                        ? Image.network(
-                            especie.portada!,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (_, child, progress) {
-                              if (progress == null) return child;
-                              return Container(
-                                color: AppTheme.lightGray,
-                                child: const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+
+              const SizedBox(height: 14),
+
+              // Lista de especies o estado vacío
+              Expanded(
+                child: species.isEmpty
+                    ? const EmptyCatalogState()
+                    : ListView.builder(
+                        itemCount: species.length,
+                        itemBuilder: (context, index) {
+                          return SpeciesListTile(
+                            species: species[index],
+                            onTap: () {
+                              // Navigator.push abre una nueva pantalla encima de la actual
+                              // y permite volver con el botón de regreso
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => EspecieDetailPage(
+                                    especie: species[index],
                                   ),
                                 ),
                               );
+
+                              // Aquí irá la navegación a SpeciesDetailPage
                             },
-                            errorBuilder: (_, __, ___) => Container(
-                              color: AppTheme.lightGray,
-                              child: Icon(
-                                Icons.image_not_supported_outlined,
-                                color: AppTheme.textGray,
-                              ),
-                            ),
-                          )
-                        : Container(
-                            color: AppTheme.lightGray,
-                            child: Icon(
-                              Icons.image_outlined,
-                              color: AppTheme.textGray,
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              especie.nombreComun,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colorEstado.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              especie.estadoConservacion,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: colorEstado,
-                              ),
-                            ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        especie.nombreCientifico,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                          color: AppTheme.textGray,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        especie.zonaGeografica,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppTheme.textGray,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 4),
-                Icon(Icons.chevron_right, color: AppTheme.lightGray, size: 20),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
